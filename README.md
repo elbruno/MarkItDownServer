@@ -2,6 +2,10 @@
 
 A production-ready web server application built using FastAPI that receives binary data from various document formats and converts them to Markdown using the MarkItDown library.
 
+> **💡 Quick Answer: Is there a concurrency limit?**  
+> By default, the server runs with 1 worker and no rate limiting. You can configure workers and rate limits using environment variables.  
+> See [CONCURRENCY_SUMMARY.md](./CONCURRENCY_SUMMARY.md) for a quick guide or [CONCURRENCY.md](./CONCURRENCY.md) for detailed information.
+
 ## 🚀 Features
 
 - **Multiple Format Support**: Convert DOC, DOCX, PPT, PPTX, PDF, XLS, XLSX, ODT, ODS, ODP, and TXT files to Markdown
