@@ -17,7 +17,11 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
     {
         var results = new List<IngestedDocument>();
         var sourceFiles = Directory.GetFiles(sourceDirectory, "*.pdf");
-        var existingDocumentsById = existingDocuments.ToDictionary(d => d.DocumentId);
+        var existingDocumentsById = existingDocuments
+    .GroupBy(d => d.DocumentId)
+    .ToDictionary(g => g.Key, g => g
+        .OrderByDescending(d => d.DocumentVersion) // or other ordering
+        .First());
 
         foreach (var sourceFile in sourceFiles)
         {
@@ -26,7 +30,12 @@ public class PDFDirectorySource(string sourceDirectory) : IIngestionSource
             var existingDocumentVersion = existingDocumentsById.TryGetValue(sourceFileId, out var existingDocument) ? existingDocument.DocumentVersion : null;
             if (existingDocumentVersion != sourceFileVersion)
             {
-                results.Add(new() { Key = Guid.CreateVersion7().ToString(), SourceId = SourceId, DocumentId = sourceFileId, DocumentVersion = sourceFileVersion });
+                results.Add(new IngestedDocument {
+                    Key = $"{SourceId}:{sourceFileId}",   // stable key
+                    SourceId = SourceId,
+                    DocumentId = sourceFileId,
+                    DocumentVersion = sourceFileVersion
+                });
             }
         }
 
