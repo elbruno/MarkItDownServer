@@ -111,6 +111,8 @@ This template leverages JavaScript libraries to provide essential functionality.
 4. A confirmation message will appear in the chat when the document is ready
 5. You can now ask questions about the document content
 
+**Note**: Uploaded documents are converted to Markdown for indexing. When citations reference uploaded documents, they will be marked as "(uploaded)" and won't have a PDF viewer link since the original file format has been converted. The example documents in the `/Data/` folder maintain their PDF viewer links.
+
 ## Chatting with Documents
 
 Once documents are uploaded or the example PDFs are available, you can ask questions like:
