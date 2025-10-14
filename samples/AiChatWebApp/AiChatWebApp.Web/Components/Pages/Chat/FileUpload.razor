@@ -1,0 +1,105 @@
+@inject ILogger<FileUpload> Logger
+@inject IJSRuntime JS
+
+<div class="file-upload-container">
+    <label for="file-upload" class="file-upload-button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="upload-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        Upload Document
+    </label>
+    <InputFile id="file-upload" OnChange="@HandleFileSelected" accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.txt,.md,.html" class="file-input" />
+    
+    @if (isUploading)
+    {
+        <div class="upload-status uploading">
+            <span class="spinner"></span>
+            <span>Uploading @uploadingFileName...</span>
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="upload-status @statusClass">
+            @statusMessage
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnUploadComplete { get; set; }
+
+    private bool isUploading = false;
+    private string uploadingFileName = string.Empty;
+    private string statusMessage = string.Empty;
+    private string statusClass = string.Empty;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null)
+            return;
+
+        try
+        {
+            isUploading = true;
+            uploadingFileName = file.Name;
+            statusMessage = string.Empty;
+            statusClass = string.Empty;
+            StateHasChanged();
+
+            // Validate file size (50MB limit)
+            const long maxFileSize = 50L * 1024 * 1024;
+            if (file.Size > maxFileSize)
+            {
+                throw new Exception("File size exceeds 50MB limit");
+            }
+
+            // Create multipart form data
+            using var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(file.OpenReadStream(maxFileSize));
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            content.Add(fileContent, "file", file.Name);
+
+            // Upload to API
+            using var httpClient = new HttpClient { BaseAddress = new Uri(JS.InvokeAsync<string>("eval", "window.location.origin").Result) };
+            var response = await httpClient.PostAsync("/api/upload", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                statusMessage = $"✓ {file.Name} uploaded and processed successfully";
+                statusClass = "success";
+                Logger.LogInformation("File uploaded successfully: {FileName}", file.Name);
+                
+                // Notify parent component
+                await OnUploadComplete.InvokeAsync(file.Name);
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Upload failed: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error uploading file");
+            statusMessage = $"✗ Error: {ex.Message}";
+            statusClass = "error";
+        }
+        finally
+        {
+            isUploading = false;
+            uploadingFileName = string.Empty;
+            StateHasChanged();
+
+            // Clear status message after 5 seconds
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(5000);
+                statusMessage = string.Empty;
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+    }
+}

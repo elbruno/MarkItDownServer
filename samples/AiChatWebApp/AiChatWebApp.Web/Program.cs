@@ -2,6 +2,7 @@ using Microsoft.Extensions.AI;
 using AiChatWebApp.Web.Components;
 using AiChatWebApp.Web.Services;
 using AiChatWebApp.Web.Services.Ingestion;
+using AiChatWebApp.Web.Api;
 using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,14 @@ builder.Services.AddSqliteCollection<string, IngestedDocument>("data-aichatwebap
 builder.Services.AddScoped<DataIngestor>();
 builder.Services.AddSingleton<SemanticSearch>();
 
+// Configure MarkItDown service
+var markItDownServiceUrl = builder.Configuration["MarkItDownServiceUrl"] ?? "http://localhost:8490";
+builder.Services.AddHttpClient<MarkItDownService>(client =>
+{
+    client.BaseAddress = new Uri(markItDownServiceUrl);
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
@@ -40,6 +49,9 @@ app.UseAntiforgery();
 app.UseStaticFiles();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Map document upload endpoint
+app.MapDocumentUploadEndpoint();
 
 // By default, we ingest PDF files from the /wwwroot/Data directory. You can ingest from
 // other sources by implementing IIngestionSource.

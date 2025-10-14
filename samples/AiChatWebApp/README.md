@@ -1,6 +1,15 @@
-# AI Chat with Custom Data
+# AI Chat Web App with Document Upload and MarkItDown Integration
 
-This project is an AI chat application that demonstrates how to chat with custom data using an AI language model. Please note that this template is currently in an early preview stage. If you have feedback, please take a [brief survey](https://aka.ms/dotnet-chat-templatePreview2-survey).
+This project is an AI chat application that demonstrates how to chat with custom data using an AI language model. It integrates with the MarkItDown server to convert various document formats to Markdown, enabling users to upload and chat with their documents.
+
+## Features
+
+- **AI-Powered Chat**: Chat with your documents using GitHub Models or Azure AI Foundry
+- **Document Upload**: Upload documents (PDF, Word, PowerPoint, Excel, Text files) through the web interface
+- **MarkItDown Integration**: Automatic conversion of uploaded documents to Markdown format
+- **Vector Search**: Semantic search across ingested documents using embeddings
+- **Aspire Orchestration**: Built with .NET Aspire for easy development and deployment
+- **Real-time Processing**: Documents are processed and indexed immediately after upload
 
 >[!NOTE]
 > Before running this project you need to configure the API keys or endpoints for the providers you have chosen. See below for details specific to your choices.
@@ -27,6 +36,43 @@ dotnet user-secrets set ConnectionStrings:openai "Endpoint=https://models.infere
 
 Learn more about [prototyping with AI models using GitHub Models](https://docs.github.com/github-models/prototyping-with-ai-models).
 
+# Configure MarkItDown Service
+
+This application uses the MarkItDown server to convert uploaded documents to Markdown format. You need to have the MarkItDown server running before starting the application.
+
+## Option 1: Run MarkItDown Server Locally
+
+The easiest way is to run the MarkItDown server from the repository root:
+
+```sh
+# From the MarkItDownServer repository root
+cd ../../
+python app.py
+```
+
+The server will be available at `http://localhost:8490` by default.
+
+## Option 2: Use Docker
+
+If you have Docker available, you can run the MarkItDown server in a container:
+
+```sh
+# Build the Docker image (from repository root)
+docker build -t markitdownserver:local .
+
+# Run the container
+docker run -d --name markitdownserver -p 8490:8490 markitdownserver:local
+```
+
+## Option 3: Use a Remote MarkItDown Server
+
+If you have a MarkItDown server running elsewhere, configure the URL in the AppHost:
+
+```sh
+cd AiChatWebApp.AppHost
+dotnet user-secrets set "MarkItDownServiceUrl" "http://your-markitdown-server:8490"
+```
+
 # Running the application
 
 ## Using Visual Studio
@@ -51,7 +97,74 @@ See [Troubleshoot untrusted localhost certificate in Aspire](https://learn.micro
 
 This template leverages JavaScript libraries to provide essential functionality. These libraries are located in the wwwroot/lib folder of the AiChatWebApp.Web project. For instructions on updating each dependency, please refer to the README.md file in each respective folder.
 
+# Using the Application
+
+## Uploading Documents
+
+1. Click the **"Upload Document"** button at the top of the chat interface
+2. Select a document from your computer (supported formats: PDF, Word, PowerPoint, Excel, Text, Markdown, HTML)
+3. The document will be uploaded and automatically processed using the MarkItDown service
+4. Once processed, you can ask questions about the document content
+
+## Chatting with Documents
+
+Once documents are uploaded or the example PDFs are available, you can ask questions like:
+
+- "What does the GPS watch document say about battery life?"
+- "Summarize the emergency survival kit guide"
+- "What are the key features mentioned in the uploaded document?"
+
+The AI will search through the ingested documents and provide answers with citations.
+
+## Architecture
+
+This application consists of several components:
+
+1. **AiChatWebApp.Web** - Blazor Server web application with chat UI and document upload
+2. **AiChatWebApp.AppHost** - .NET Aspire orchestration host
+3. **AiChatWebApp.ServiceDefaults** - Shared service configuration
+4. **MarkItDown Service** - External service for document conversion (runs separately)
+
+### Document Processing Flow
+
+1. User uploads a document through the web interface
+2. Document is saved to the `wwwroot/uploads` directory
+3. Upload API endpoint triggers the ingestion process
+4. UploadedFileSource reads the file and calls MarkItDown service to convert it to Markdown
+5. The Markdown content is chunked and stored in the SQLite vector database
+6. Embeddings are generated for semantic search
+7. The document is now available for chat queries
+
+## Troubleshooting
+
+### MarkItDown Service Not Available
+
+If you see errors about connecting to the MarkItDown service:
+
+1. Ensure the MarkItDown server is running (see configuration section above)
+2. Check that the service URL is correctly configured
+3. Verify network connectivity to the service
+
+### Upload Fails
+
+If document uploads fail:
+
+1. Check the file size is under 50MB
+2. Ensure the file format is supported
+3. Check the application logs for detailed error messages
+
+### Chat Not Finding Documents
+
+If the AI can't find information from your documents:
+
+1. Wait a few seconds after upload for processing to complete
+2. Try rephrasing your question
+3. Check that the document contains the information you're looking for
+
 # Learn More
 To learn more about development with .NET and AI, check out the following links:
 
 * [AI for .NET Developers](https://learn.microsoft.com/dotnet/ai/)
+* [.NET Aspire Documentation](https://learn.microsoft.com/dotnet/aspire/)
+* [GitHub Models](https://docs.github.com/github-models)
+* [MarkItDown Project](https://github.com/microsoft/markitdown)

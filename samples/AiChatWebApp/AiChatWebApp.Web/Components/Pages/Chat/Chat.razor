@@ -18,6 +18,7 @@
 </ChatMessageList>
 
 <div class="chat-container">
+    <FileUpload OnUploadComplete="@HandleFileUpload" />
     <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions" />
     <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput" />
     <SurveyPrompt /> @* Remove this line to eliminate the template survey message *@
@@ -115,6 +116,16 @@
         var results = await Search.SearchAsync(searchPhrase, filenameFilter, maxResults: 5);
         return results.Select(result =>
             $"<result filename=\"{result.DocumentId}\" page_number=\"{result.PageNumber}\">{result.Text}</result>");
+    }
+
+    private async Task HandleFileUpload(string fileName)
+    {
+        // Add a system message to inform the user that the file has been uploaded
+        var systemMessage = new ChatMessage(ChatRole.System, $"Document '{fileName}' has been uploaded and is now available for search.");
+        messages.Add(systemMessage);
+        
+        // Optionally, trigger a chat suggestion about the uploaded file
+        await InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
