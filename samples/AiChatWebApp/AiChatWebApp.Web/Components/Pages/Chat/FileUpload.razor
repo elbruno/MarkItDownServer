@@ -1,4 +1,5 @@
 @inject ILogger<FileUpload> Logger
+@inject MarkItDownService markItDownService
 @inject IJSRuntime JS
 
 <div class="file-upload-container">
@@ -27,8 +28,10 @@
 </div>
 
 @code {
+    // Event raised when a file is successfully converted.
+    // Provides a tuple with (OriginalFileName, GeneratedMarkdown)
     [Parameter]
-    public EventCallback<string> OnUploadComplete { get; set; }
+    public EventCallback<(string FileName, string Markdown)> OnUploadComplete { get; set; }
 
     private bool isUploading = false;
     private string uploadingFileName = string.Empty;
@@ -56,30 +59,10 @@
                 throw new Exception("File size exceeds 50MB limit");
             }
 
-            // Create multipart form data
-            using var content = new MultipartFormDataContent();
-            var fileContent = new StreamContent(file.OpenReadStream(maxFileSize));
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-            content.Add(fileContent, "file", file.Name);
-
-            // Upload to API
-            using var httpClient = new HttpClient { BaseAddress = new Uri(JS.InvokeAsync<string>("eval", "window.location.origin").Result) };
-            var response = await httpClient.PostAsync("/api/upload", content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                statusMessage = $"✓ {file.Name} uploaded and processed successfully";
-                statusClass = "success";
-                Logger.LogInformation("File uploaded successfully: {FileName}", file.Name);
-                
-                // Notify parent component
-                await OnUploadComplete.InvokeAsync(file.Name);
-            }
-            else
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                throw new Exception($"Upload failed: {error}");
-            }
+            var generatedMarkDown = await markItDownService.ConvertToMarkdownAsync(file.OpenReadStream(maxFileSize), file.Name);
+            await OnUploadComplete.InvokeAsync((file.Name, generatedMarkDown));
+            statusMessage = "✓ File converted successfully";
+            statusClass = "success";
         }
         catch (Exception ex)
         {

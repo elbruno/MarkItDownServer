@@ -1,8 +1,10 @@
 ﻿@page "/"
 @using System.ComponentModel
+@using AiChatWebApp.Web.Services.Ingestion
 @inject IChatClient ChatClient
 @inject NavigationManager Nav
 @inject SemanticSearch Search
+@inject DataIngestor dataIngestor
 @implements IDisposable
 
 <PageTitle>Chat</PageTitle>
@@ -118,14 +120,19 @@
             $"<result filename=\"{result.DocumentId}\" page_number=\"{result.PageNumber}\">{result.Text}</result>");
     }
 
-    private async Task HandleFileUpload(string fileName)
+    private async Task HandleFileUpload((string FileName, string Markdown) uploadResult)
     {
-        // Add a system message to inform the user that the file has been uploaded
-        var systemMessage = new ChatMessage(ChatRole.System, $"Document '{fileName}' has been uploaded and is now available for search.");
+        var (fileName, markdown) = uploadResult;
+
+        // Add a system message to inform the user that the file has been uploaded and converted
+        var systemMessage = new ChatMessage(ChatRole.Assistant, $"Document '{fileName}' has been uploaded, converted to markdown, and is now available for search.");
         messages.Add(systemMessage);
-        
-        // Optionally, trigger a chat suggestion about the uploaded file
+        ChatMessageItem.NotifyChanged(systemMessage);
+
+        // (Future) Optionally index 'markdown' content into a vector store or search index here.
         await InvokeAsync(StateHasChanged);
+
+        await dataIngestor.IngestDataAsync(source);
     }
 
     public void Dispose()
