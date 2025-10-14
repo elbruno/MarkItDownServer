@@ -104,14 +104,16 @@ This template leverages JavaScript libraries to provide essential functionality.
 1. Click the **"Upload Document"** button at the top of the chat interface
 2. Select a document from your computer (supported formats: PDF, Word, PowerPoint, Excel, Text, Markdown, HTML)
 3. The document will be:
+   - Saved to the `/Data/` folder for viewing and downloading
    - Converted to Markdown using the MarkItDown service
    - Automatically chunked into searchable segments
    - Indexed in the vector store with embeddings
    - Immediately available for chat queries
 4. A confirmation message will appear in the chat when the document is ready
 5. You can now ask questions about the document content
+6. PDF files can be viewed through the citation links
 
-**Note**: Uploaded documents are converted to Markdown for indexing. When citations reference uploaded documents, they will be marked as "(uploaded)" and won't have a PDF viewer link since the original file format has been converted. The example documents in the `/Data/` folder maintain their PDF viewer links.
+**Note**: Uploaded documents are saved to `wwwroot/Data/` and are also converted to Markdown for indexing. PDF citations include a viewer link to see the original document. Other document types (Word, Excel, etc.) will show the citation but won't have a preview viewer.
 
 ## Chatting with Documents
 
