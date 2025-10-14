@@ -103,8 +103,13 @@ This template leverages JavaScript libraries to provide essential functionality.
 
 1. Click the **"Upload Document"** button at the top of the chat interface
 2. Select a document from your computer (supported formats: PDF, Word, PowerPoint, Excel, Text, Markdown, HTML)
-3. The document will be uploaded and automatically processed using the MarkItDown service
-4. Once processed, you can ask questions about the document content
+3. The document will be:
+   - Converted to Markdown using the MarkItDown service
+   - Automatically chunked into searchable segments
+   - Indexed in the vector store with embeddings
+   - Immediately available for chat queries
+4. A confirmation message will appear in the chat when the document is ready
+5. You can now ask questions about the document content
 
 ## Chatting with Documents
 

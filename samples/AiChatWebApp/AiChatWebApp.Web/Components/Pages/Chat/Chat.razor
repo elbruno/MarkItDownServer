@@ -124,15 +124,30 @@
     {
         var (fileName, markdown) = uploadResult;
 
-        // Add a system message to inform the user that the file has been uploaded and converted
-        var systemMessage = new ChatMessage(ChatRole.Assistant, $"Document '{fileName}' has been uploaded, converted to markdown, and is now available for search.");
-        messages.Add(systemMessage);
-        ChatMessageItem.NotifyChanged(systemMessage);
+        try
+        {
+            // Create an ingestion source from the markdown content
+            var source = new MarkdownIngestionSource(fileName, markdown);
+            
+            // Ingest the document into the vector store
+            await dataIngestor.IngestDataAsync(source);
 
-        // (Future) Optionally index 'markdown' content into a vector store or search index here.
+            // Add a system message to inform the user that the file has been uploaded and indexed
+            var systemMessage = new ChatMessage(ChatRole.Assistant, 
+                $"✓ Document '{fileName}' has been uploaded, converted to markdown, and indexed. You can now ask questions about it!");
+            messages.Add(systemMessage);
+            ChatMessageItem.NotifyChanged(systemMessage);
+        }
+        catch (Exception ex)
+        {
+            // Show error message if ingestion fails
+            var errorMessage = new ChatMessage(ChatRole.Assistant, 
+                $"✗ Error indexing '{fileName}': {ex.Message}");
+            messages.Add(errorMessage);
+            ChatMessageItem.NotifyChanged(errorMessage);
+        }
+        
         await InvokeAsync(StateHasChanged);
-
-        await dataIngestor.IngestDataAsync(source);
     }
 
     public void Dispose()

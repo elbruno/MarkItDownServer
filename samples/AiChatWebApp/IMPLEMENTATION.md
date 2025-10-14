@@ -50,9 +50,29 @@ HTTP client wrapper for the MarkItDown API:
 public async Task<string> ConvertToMarkdownAsync(Stream fileStream, string fileName)
 ```
 
+#### MarkdownIngestionSource (`Services/Ingestion/MarkdownIngestionSource.cs`)
+
+Implements `IIngestionSource` interface for direct markdown ingestion:
+
+- Accepts already-converted markdown content
+- Creates chunks from markdown text in memory
+- No file I/O required - works with in-memory content
+- Used for documents uploaded through the FileUpload component
+
+**Key Methods**:
+
+- `GetNewOrModifiedDocumentsAsync()` - Returns the single document to ingest
+- `CreateChunksForDocumentAsync()` - Chunks the markdown content
+
+**Usage**:
+```csharp
+var source = new MarkdownIngestionSource(fileName, markdownContent);
+await dataIngestor.IngestDataAsync(source);
+```
+
 #### UploadedFileSource (`Services/Ingestion/UploadedFileSource.cs`)
 
-Implements `IIngestionSource` interface for document ingestion:
+Implements `IIngestionSource` interface for file-based document ingestion:
 
 - Monitors uploaded files in `wwwroot/uploads` directory
 - Calls MarkItDown service for conversion
@@ -63,6 +83,8 @@ Implements `IIngestionSource` interface for document ingestion:
 
 - `GetNewOrModifiedDocumentsAsync()` - Detects new/changed files
 - `CreateChunksForDocumentAsync()` - Converts and chunks documents
+
+**Note**: This is used by the API endpoint for batch processing. The FileUpload component uses MarkdownIngestionSource instead for immediate processing.
 
 ### 3. Document Upload API
 
@@ -151,24 +173,30 @@ app.MapDocumentUploadEndpoint();
 ### Document Upload Flow
 
 ```
-1. User selects file in browser
+1. User selects file in browser (FileUpload.razor)
    ↓
-2. FileUpload.razor handles InputFile event
+2. File sent to MarkItDown service for conversion
    ↓
-3. File uploaded to /api/upload endpoint
+3. Markdown content returned to FileUpload component
    ↓
-4. DocumentUploadEndpoint saves file to wwwroot/uploads
+4. OnUploadComplete event fired with (FileName, Markdown) tuple
    ↓
-5. UploadedFileSource triggered by DataIngestor
+5. Chat.razor receives event in HandleFileUpload method
    ↓
-6. File sent to MarkItDown service for conversion
+6. MarkdownIngestionSource created with markdown content
    ↓
-7. Markdown content chunked and embedded
+7. DataIngestor processes the source
    ↓
-8. Chunks stored in SQLite vector database
+8. Markdown content chunked (500 chars per chunk)
    ↓
-9. Document ready for chat queries
+9. Chunks stored in SQLite vector database with embeddings
+   ↓
+10. Confirmation message shown in chat
+   ↓
+11. Document immediately available for search queries
 ```
+
+**Note**: This flow processes documents entirely in memory without saving to disk, making it faster and more efficient than the file-based approach.
 
 ### Chat Query Flow
 
