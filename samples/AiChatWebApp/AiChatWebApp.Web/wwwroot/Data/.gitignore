@@ -1,0 +1,9 @@
+# Track only the current sample PDF files in this directory
+# Ignore everything by default
+*
+
+# Allow this gitignore file
+!.gitignore
+# Allow the existing PDF files (do not track any new ones added later)
+!Example_Emergency_Survival_Kit.pdf
+!Example_GPS_Watch.pdf
