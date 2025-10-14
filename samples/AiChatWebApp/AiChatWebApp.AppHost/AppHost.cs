@@ -8,15 +8,15 @@ var openai = builder.AddConnectionString("openai");
 
 // Add MarkItDown service as a container or external endpoint
 // Option 1: If running MarkItDown locally or externally, configure the endpoint
-var markitdownServiceUrl = builder.Configuration["MarkItDownServiceUrl"] ?? "http://localhost:8490";
-var markitdown = builder.AddParameter("markitdown-url", markitdownServiceUrl);
+// var markitdownServiceUrl = builder.Configuration["MarkItDownServiceUrl"] ?? "http://localhost:8490";
+// var markitdown = builder.AddParameter("markitdown-url", markitdownServiceUrl);
 
 // Option 2: If you have the MarkItDown Docker image available, uncomment this:
-// var markitdown = builder.AddContainer("markitdownserver", "markitdownserver", "local")
-//     .WithHttpEndpoint(port: 8490, targetPort: 8490, name: "http");
+var markitdown = builder.AddContainer("markitdownserver", "markitdownserver", "latest")
+    .WithHttpEndpoint(port: 8490, targetPort: 8490, name: "http");
 
 var webApp = builder.AddProject<Projects.AiChatWebApp_Web>("aichatweb-app");
 webApp.WithReference(openai);
-webApp.WithEnvironment("MarkItDownServiceUrl", markitdown);
+webApp.WithEnvironment("MarkItDownServiceUrl", markitdown.GetEndpoint("http"));
 
 builder.Build().Run();

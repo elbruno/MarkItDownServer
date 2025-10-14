@@ -5,6 +5,7 @@ This document provides a technical overview of the AI Chat Web App implementatio
 ## Overview
 
 The AI Chat Web App is a .NET Aspire-orchestrated application that integrates:
+
 - **Blazor Server** for the web UI
 - **GitHub Models** for AI chat capabilities
 - **MarkItDown Server** for document conversion
@@ -18,16 +19,18 @@ The AI Chat Web App is a .NET Aspire-orchestrated application that integrates:
 **File**: `AiChatWebApp.AppHost/AppHost.cs`
 
 The AppHost configures:
+
 - OpenAI connection string for GitHub Models
-- MarkItDown service URL (configurable via appsettings or user secrets)
+- The MarkItDown container and its HTTP endpoint
 - Reference injection for the web application
 
 ```csharp
 var openai = builder.AddConnectionString("openai");
-var markitdown = builder.AddParameter("markitdown-url", markitdownServiceUrl);
+var markitdown = builder.AddContainer("markitdownserver", "markitdownserver", "local")
+   .WithHttpEndpoint(port: 8490, targetPort: 8490, name: "http");
 var webApp = builder.AddProject<Projects.AiChatWebApp_Web>("aichatweb-app");
 webApp.WithReference(openai);
-webApp.WithEnvironment("MarkItDownServiceUrl", markitdown);
+webApp.WithEnvironment("MarkItDownServiceUrl", markitdown.GetEndpoint("http"));
 ```
 
 ### 2. MarkItDown Integration
@@ -35,12 +38,14 @@ webApp.WithEnvironment("MarkItDownServiceUrl", markitdown);
 #### MarkItDownService (`Services/MarkItDownService.cs`)
 
 HTTP client wrapper for the MarkItDown API:
+
 - Multipart form upload to `/process_file` endpoint
 - JSON response parsing
 - Health check support
 - Error handling and logging
 
 **Key Method**:
+
 ```csharp
 public async Task<string> ConvertToMarkdownAsync(Stream fileStream, string fileName)
 ```
@@ -48,12 +53,14 @@ public async Task<string> ConvertToMarkdownAsync(Stream fileStream, string fileN
 #### UploadedFileSource (`Services/Ingestion/UploadedFileSource.cs`)
 
 Implements `IIngestionSource` interface for document ingestion:
+
 - Monitors uploaded files in `wwwroot/uploads` directory
 - Calls MarkItDown service for conversion
 - Chunks Markdown content for vector storage
 - Tracks document versions
 
 **Key Methods**:
+
 - `GetNewOrModifiedDocumentsAsync()` - Detects new/changed files
 - `CreateChunksForDocumentAsync()` - Converts and chunks documents
 
@@ -62,16 +69,19 @@ Implements `IIngestionSource` interface for document ingestion:
 **File**: `Api/DocumentUploadEndpoint.cs`
 
 RESTful endpoint at `/api/upload`:
+
 - File validation (size, type)
 - Temporary storage in `wwwroot/uploads`
 - Triggers ingestion pipeline
 - Returns upload status
 
 **Supported File Types**:
+
 - PDF, Word (DOC/DOCX), PowerPoint (PPT/PPTX)
 - Excel (XLS/XLSX), Text (TXT), Markdown (MD), HTML
 
 **Validation**:
+
 - Max file size: 50MB
 - Allowed extensions check
 - Error handling with detailed messages
@@ -81,12 +91,14 @@ RESTful endpoint at `/api/upload`:
 #### FileUpload Component (`Components/Pages/Chat/FileUpload.razor`)
 
 Blazor component features:
+
 - Hidden file input with styled button
 - Real-time upload progress
 - Success/error status display
 - Event callback on completion
 
 **CSS** (`FileUpload.razor.css`):
+
 - Modern, responsive design
 - Loading spinner animation
 - Status indicators (success/error)
@@ -95,6 +107,7 @@ Blazor component features:
 #### Integration with Chat (`Chat.razor`)
 
 Added to chat interface:
+
 - Positioned above chat suggestions
 - Triggers document ingestion on upload
 - Updates chat with system message on completion
@@ -104,6 +117,7 @@ Added to chat interface:
 #### Application Settings
 
 **AppHost/appsettings.json**:
+
 ```json
 {
   "MarkItDownServiceUrl": "http://localhost:8490"
@@ -111,6 +125,7 @@ Added to chat interface:
 ```
 
 **Web/appsettings.json**:
+
 ```json
 {
   "MarkItDownServiceUrl": "http://localhost:8490"
@@ -319,18 +334,21 @@ services:
 ## Future Enhancements
 
 ### Short Term
+
 - Add upload queue with background processing
 - Implement file cleanup scheduler
 - Add user authentication and file isolation
 - Improve error messages and retry logic
 
 ### Medium Term
+
 - Azure Blob Storage integration
 - Document preview before upload
 - Batch upload support
 - Download original files
 
 ### Long Term
+
 - Custom document processing pipelines
 - Plugin system for different converters
 - Real-time collaboration features
