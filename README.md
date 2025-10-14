@@ -17,6 +17,7 @@ A production-ready web server application built using FastAPI that receives bina
 - **Security Headers**: Built-in security headers middleware
 - **Docker Support**: Containerized deployment ready
 - **Azure Compatible**: Ready for Azure Container Apps deployment
+- **AI Chat Web App Sample**: Full-featured .NET Aspire application with document upload and RAG chat capabilities (see [samples/AiChatWebApp](./samples/AiChatWebApp/README.md))
 
 ## 📋 Table of Contents
 
@@ -265,6 +266,30 @@ dotnet run
   }
 }
 ```
+
+#### AI Chat Web App (Full-Featured Sample)
+
+Located in `samples/AiChatWebApp/`, this is a complete .NET Aspire application with:
+- Blazor Server UI with modern chat interface
+- Document upload with drag-and-drop support
+- Integration with GitHub Models for AI chat
+- Retrieval-Augmented Generation (RAG) with vector search
+- Real-time document processing and ingestion
+
+```bash
+cd samples/AiChatWebApp
+# See QUICKSTART.md for detailed setup instructions
+dotnet run --project AiChatWebApp.AppHost
+```
+
+**Features**:
+- Upload documents (PDF, Word, PowerPoint, Excel, Text) through the web UI
+- Documents are automatically converted to Markdown via MarkItDown
+- Chat with your documents using AI
+- Semantic search with citations
+- .NET Aspire orchestration with health monitoring
+
+For complete documentation, see [samples/AiChatWebApp/README.md](./samples/AiChatWebApp/README.md) or [QUICKSTART.md](./samples/AiChatWebApp/QUICKSTART.md).
 
 #### cURL Example
 
