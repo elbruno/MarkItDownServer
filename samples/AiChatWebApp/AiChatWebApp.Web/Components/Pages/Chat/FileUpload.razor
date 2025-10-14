@@ -1,0 +1,103 @@
+@inject ILogger<FileUpload> Logger
+@inject MarkItDownService markItDownService
+@inject IJSRuntime JS
+@inject IWebHostEnvironment WebHostEnvironment
+
+<div class="file-upload-container">
+    <label for="file-upload" class="file-upload-button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="upload-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+        </svg>
+        Upload Document
+    </label>
+    <InputFile id="file-upload" OnChange="@HandleFileSelected" accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.txt,.md,.html" class="file-input" />
+    
+    @if (isUploading)
+    {
+        <div class="upload-status uploading">
+            <span class="spinner"></span>
+            <span>Uploading @uploadingFileName...</span>
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="upload-status @statusClass">
+            @statusMessage
+        </div>
+    }
+</div>
+
+@code {
+    // Event raised when a file is successfully converted.
+    // Provides a tuple with (OriginalFileName, GeneratedMarkdown)
+    [Parameter]
+    public EventCallback<(string FileName, string Markdown)> OnUploadComplete { get; set; }
+
+    private bool isUploading = false;
+    private string uploadingFileName = string.Empty;
+    private string statusMessage = string.Empty;
+    private string statusClass = string.Empty;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null)
+            return;
+
+        try
+        {
+            isUploading = true;
+            uploadingFileName = file.Name;
+            statusMessage = string.Empty;
+            statusClass = string.Empty;
+            StateHasChanged();
+
+            // Validate file size (50MB limit)
+            const long maxFileSize = 50L * 1024 * 1024;
+            if (file.Size > maxFileSize)
+            {
+                throw new Exception("File size exceeds 50MB limit");
+            }
+
+            // Save the original file to the Data folder for later viewing
+            var dataFolder = Path.Combine(WebHostEnvironment.WebRootPath, "Data");
+            Directory.CreateDirectory(dataFolder);
+            var filePath = Path.Combine(dataFolder, file.Name);
+            
+            // Save file to Data folder
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.OpenReadStream(maxFileSize).CopyToAsync(fileStream);
+            }
+
+            // Convert to markdown for indexing
+            using var readStream = File.OpenRead(filePath);
+            var generatedMarkDown = await markItDownService.ConvertToMarkdownAsync(readStream, file.Name);
+            
+            await OnUploadComplete.InvokeAsync((file.Name, generatedMarkDown));
+            statusMessage = "✓ File uploaded and converted successfully";
+            statusClass = "success";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error uploading file");
+            statusMessage = $"✗ Error: {ex.Message}";
+            statusClass = "error";
+        }
+        finally
+        {
+            isUploading = false;
+            uploadingFileName = string.Empty;
+            StateHasChanged();
+
+            // Clear status message after 5 seconds
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(5000);
+                statusMessage = string.Empty;
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+    }
+}

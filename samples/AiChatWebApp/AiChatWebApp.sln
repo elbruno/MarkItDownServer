@@ -1,0 +1,34 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{B42D30A2-C737-4F25-BE88-12BB273C24B7}") = "AiChatWebApp.AppHost", "AiChatWebApp.AppHost\AiChatWebApp.AppHost.csproj", "{0A3095B3-23DD-446D-989D-DC84539BED58}"
+EndProject
+Project("{B42D30A2-C737-4F25-BE88-12BB273C24B7}") = "AiChatWebApp.ServiceDefaults", "AiChatWebApp.ServiceDefaults\AiChatWebApp.ServiceDefaults.csproj", "{09632FE7-75A6-4574-AC4E-23F63CE05046}"
+EndProject
+Project("{B42D30A2-C737-4F25-BE88-12BB273C24B7}") = "AiChatWebApp.Web", "AiChatWebApp.Web\AiChatWebApp.Web.csproj", "{326484EB-90A4-4094-8A8E-EEA33D3DBE07}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0A3095B3-23DD-446D-989D-DC84539BED58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A3095B3-23DD-446D-989D-DC84539BED58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A3095B3-23DD-446D-989D-DC84539BED58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A3095B3-23DD-446D-989D-DC84539BED58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09632FE7-75A6-4574-AC4E-23F63CE05046}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09632FE7-75A6-4574-AC4E-23F63CE05046}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09632FE7-75A6-4574-AC4E-23F63CE05046}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09632FE7-75A6-4574-AC4E-23F63CE05046}.Release|Any CPU.Build.0 = Release|Any CPU
+		{326484EB-90A4-4094-8A8E-EEA33D3DBE07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{326484EB-90A4-4094-8A8E-EEA33D3DBE07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{326484EB-90A4-4094-8A8E-EEA33D3DBE07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{326484EB-90A4-4094-8A8E-EEA33D3DBE07}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

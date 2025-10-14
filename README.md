@@ -4,7 +4,7 @@ A production-ready web server application built using FastAPI that receives bina
 
 > **💡 Quick Answer: Is there a concurrency limit?**  
 > By default, the server runs with 1 worker and no rate limiting. You can configure workers and rate limits using environment variables.  
-> See [CONCURRENCY_SUMMARY.md](./CONCURRENCY_SUMMARY.md) for a quick guide or [CONCURRENCY.md](./CONCURRENCY.md) for detailed information.
+> See [docs/CONCURRENCY_SUMMARY.md](./docs/CONCURRENCY_SUMMARY.md) for a quick guide or [docs/CONCURRENCY.md](./docs/CONCURRENCY.md) for detailed information.
 
 ## 🚀 Features
 
@@ -17,25 +17,17 @@ A production-ready web server application built using FastAPI that receives bina
 - **Security Headers**: Built-in security headers middleware
 - **Docker Support**: Containerized deployment ready
 - **Azure Compatible**: Ready for Azure Container Apps deployment
+- **AI Chat Web App Sample**: Full-featured .NET Aspire application with document upload and RAG chat capabilities (see [samples/AiChatWebApp](./samples/AiChatWebApp/README.md))
 
 ## 📋 Table of Contents
 
 - [Quick Start](#quick-start)
 - [Installation](#installation)
-  - [Local Development](#local-development)
-  - [Docker Deployment](#docker-deployment)
 - [Usage](#usage)
-  - [API Endpoints](#api-endpoints)
-  - [Client Examples](#client-examples)
+- [Samples](#samples)
 - [Configuration](#configuration)
-- [Concurrency and Performance](#concurrency-and-performance)
-- [Testing](#testing)
-- [Deployment](#deployment)
-  - [Local Deployment](#local-deployment)
-  - [Azure Container Apps](#azure-container-apps)
-- [Development](#development)
 - [API Documentation](#api-documentation)
-- [Dependencies](#dependencies)
+- [Documentation](#documentation)
 - [License](#license)
 
 ## ⚡ Quick Start
@@ -266,6 +258,30 @@ dotnet run
 }
 ```
 
+#### AI Chat Web App (Full-Featured Sample)
+
+Located in `samples/AiChatWebApp/`, this is a complete .NET Aspire application with:
+- Blazor Server UI with modern chat interface
+- Document upload with drag-and-drop support
+- Integration with GitHub Models for AI chat
+- Retrieval-Augmented Generation (RAG) with vector search
+- Real-time document processing and ingestion
+
+```bash
+cd samples/AiChatWebApp
+# See QUICKSTART.md for detailed setup instructions
+dotnet run --project AiChatWebApp.AppHost
+```
+
+**Features**:
+- Upload documents (PDF, Word, PowerPoint, Excel, Text) through the web UI
+- Documents are automatically converted to Markdown via MarkItDown
+- Chat with your documents using AI
+- Semantic search with citations
+- .NET Aspire orchestration with health monitoring
+
+For complete documentation, see [samples/AiChatWebApp/README.md](./samples/AiChatWebApp/README.md) or [QUICKSTART.md](./samples/AiChatWebApp/QUICKSTART.md).
+
 #### cURL Example
 
 ```bash
@@ -377,7 +393,7 @@ pip install slowapi
 - **Medium scale** (100-1000 req/min): 2-4 workers  
 - **Large scale** (> 1000 req/min): Use horizontal scaling with load balancer
 
-**📚 For detailed concurrency information**, see [CONCURRENCY.md](./CONCURRENCY.md)
+**📚 For detailed concurrency information**, see [docs/CONCURRENCY.md](./docs/CONCURRENCY.md)
 
 ## 🧪 Testing
 
@@ -448,7 +464,7 @@ docker logs -f markitdownserver
 
 ### Azure Container Apps
 
-See the comprehensive [CODE_QUALITY_IMPROVEMENTS.md](./CODE_QUALITY_IMPROVEMENTS.md) document for detailed Azure deployment instructions, including:
+See the comprehensive [docs/CODE_QUALITY_IMPROVEMENTS.md](./docs/CODE_QUALITY_IMPROVEMENTS.md) document for detailed Azure deployment instructions, including:
 
 - Multi-stage Dockerfile optimization
 - Azure CLI deployment scripts
@@ -468,7 +484,7 @@ CONTAINER_APP_NAME="markitdown-server"
 # Create resource group
 az group create --name $RESOURCE_GROUP --location $LOCATION
 
-# Deploy (see CODE_QUALITY_IMPROVEMENTS.md for complete script)
+# Deploy (see docs/CODE_QUALITY_IMPROVEMENTS.md for complete script)
 az containerapp up \
   --name $CONTAINER_APP_NAME \
   --resource-group $RESOURCE_GROUP \
@@ -486,7 +502,7 @@ MarkItDownServer/
 ├── requirements.txt                # Python dependencies
 ├── dockerfile                      # Docker configuration
 ├── README.md                       # This file
-├── CODE_QUALITY_IMPROVEMENTS.md    # Comprehensive improvement guide
+├── docs/                           # Comprehensive documentation
 ├── samples/
 │   ├── SimpleConsole/              # Basic C# client example
 │   │   ├── Program.cs
@@ -601,7 +617,7 @@ docker logs markitdownserver
 For issues, questions, or contributions:
 
 - **GitHub Issues**: [Create an issue](https://github.com/elbruno/MarkItDownServer/issues)
-- **Documentation**: See [CODE_QUALITY_IMPROVEMENTS.md](./CODE_QUALITY_IMPROVEMENTS.md)
+- **Documentation**: See [docs/](./docs/)
 
 ## 📄 License
 
@@ -613,6 +629,26 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - Powered by [MarkItDown](https://github.com/microsoft/markitdown)
 - Developed by [El Bruno](https://github.com/elbruno)
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the [docs](./docs/) directory:
+
+- **[Quick Reference](./docs/QUICK_REFERENCE.md)** - Common commands and API usage
+- **[Developer Manual](./docs/DEVELOPER_MANUAL.md)** - Integration guide for developers
+- **[Concurrency Guide](./docs/CONCURRENCY.md)** - Performance and scaling information
+- **[Code Quality](./docs/CODE_QUALITY_IMPROVEMENTS.md)** - Best practices and improvements
+- **[Implementation Plans](./docs/plans/)** - Detailed feature implementation plans
+
+### Sample Applications
+
+- **[AI Chat Web App](./samples/AiChatWebApp/)** - Full .NET Aspire application with:
+  - Document upload and conversion
+  - RAG-based chat with semantic search
+  - Vector store integration
+  - Real-time markdown preview
+  - [Quick Start Guide](./samples/AiChatWebApp/QUICKSTART.md)
+  - [User Manual](./samples/AiChatWebApp/docs/USER_MANUAL.md) *(coming soon)*
+
 ## 📈 Version History
 
 - **v1.0.0** (2025-01): Initial release with production-ready features
@@ -621,6 +657,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
   - Health check endpoints
   - Docker support
   - Azure deployment ready
+  - AI Chat Web App sample with .NET Aspire
 
 ---
 
