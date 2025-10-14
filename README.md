@@ -2,6 +2,10 @@
 
 A production-ready web server application built using FastAPI that receives binary data from various document formats and converts them to Markdown using the MarkItDown library.
 
+> **💡 Quick Answer: Is there a concurrency limit?**  
+> By default, the server runs with 1 worker and no rate limiting. You can configure workers and rate limits using environment variables.  
+> See [CONCURRENCY_SUMMARY.md](./CONCURRENCY_SUMMARY.md) for a quick guide or [CONCURRENCY.md](./CONCURRENCY.md) for detailed information.
+
 ## 🚀 Features
 
 - **Multiple Format Support**: Convert DOC, DOCX, PPT, PPTX, PDF, XLS, XLSX, ODT, ODS, ODP, and TXT files to Markdown
@@ -24,6 +28,7 @@ A production-ready web server application built using FastAPI that receives bina
   - [API Endpoints](#api-endpoints)
   - [Client Examples](#client-examples)
 - [Configuration](#configuration)
+- [Concurrency and Performance](#concurrency-and-performance)
 - [Testing](#testing)
 - [Deployment](#deployment)
   - [Local Deployment](#local-deployment)
@@ -317,6 +322,9 @@ The server can be configured using environment variables:
 - `HOST`: Server host (default: 0.0.0.0)
 - `MAX_FILE_SIZE`: Maximum file size in bytes (default: 52428800 = 50MB)
 - `LOG_LEVEL`: Logging level (default: INFO)
+- `WORKERS`: Number of worker processes (default: 1)
+- `ENABLE_RATE_LIMIT`: Enable rate limiting (default: false)
+- `RATE_LIMIT`: Rate limit (default: 60/minute)
 
 ### Docker Environment
 
@@ -326,8 +334,50 @@ docker run -d \
   -p 8490:8490 \
   -e PORT=8490 \
   -e MAX_FILE_SIZE=104857600 \
+  -e WORKERS=4 \
+  -e ENABLE_RATE_LIMIT=true \
+  -e RATE_LIMIT=100/minute \
   markitdownserver:latest
 ```
+
+## 🚦 Concurrency and Performance
+
+### Default Behavior
+
+By default, the server runs with:
+- **1 worker process** (single worker)
+- **Async request handling** via FastAPI
+- **No rate limiting**
+
+### Configuring Concurrency
+
+**Multi-worker setup** for better performance:
+```bash
+# Run with 4 workers
+docker run -d -p 8490:8490 -e WORKERS=4 markitdownserver:latest
+```
+
+**Enable rate limiting** to prevent abuse:
+```bash
+# Limit to 100 requests per minute per IP
+docker run -d -p 8490:8490 \
+  -e ENABLE_RATE_LIMIT=true \
+  -e RATE_LIMIT=100/minute \
+  markitdownserver:latest
+```
+
+**Note**: Rate limiting requires `slowapi` package. Install with:
+```bash
+pip install slowapi
+```
+
+### Performance Recommendations
+
+- **Small scale** (< 100 req/min): 1-2 workers
+- **Medium scale** (100-1000 req/min): 2-4 workers  
+- **Large scale** (> 1000 req/min): Use horizontal scaling with load balancer
+
+**📚 For detailed concurrency information**, see [CONCURRENCY.md](./CONCURRENCY.md)
 
 ## 🧪 Testing
 

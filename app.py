@@ -11,6 +11,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from markitdown import MarkItDown
 
+# Optional rate limiting support
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.util import get_remote_address
+    from slowapi.errors import RateLimitExceeded
+    RATE_LIMIT_AVAILABLE = True
+except ImportError:
+    RATE_LIMIT_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -18,6 +27,11 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 logger = logging.getLogger(__name__)
+
+# Environment-based configuration
+WORKERS = int(os.getenv('WORKERS', '1'))
+ENABLE_RATE_LIMIT = os.getenv('ENABLE_RATE_LIMIT', 'false').lower() == 'true'
+RATE_LIMIT = os.getenv('RATE_LIMIT', '60/minute')  # Default: 60 requests per minute
 
 # FastAPI app with metadata
 app = FastAPI(
@@ -42,6 +56,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Configure rate limiting if enabled and available
+if ENABLE_RATE_LIMIT and RATE_LIMIT_AVAILABLE:
+    limiter = Limiter(key_func=get_remote_address, default_limits=[RATE_LIMIT])
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    logger.info(f"Rate limiting enabled: {RATE_LIMIT}")
+elif ENABLE_RATE_LIMIT and not RATE_LIMIT_AVAILABLE:
+    logger.warning("Rate limiting requested but slowapi not installed. Install with: pip install slowapi")
+else:
+    logger.info("Rate limiting disabled")
 
 # Security headers middleware
 @app.middleware("http")
@@ -68,6 +93,9 @@ class HealthResponse(BaseModel):
     timestamp: str
     service: str
     version: str
+    workers: int
+    rate_limit_enabled: bool
+    rate_limit: str | None
 
 def allowed_file(filename: str | None) -> bool:
     """Check if the uploaded file has an allowed extension.
@@ -115,7 +143,7 @@ def read_root():
     "/health",
     response_model=HealthResponse,
     summary="Health check endpoint",
-    description="Returns the health status of the service"
+    description="Returns the health status of the service with concurrency information"
 )
 def health_check():
     """Get service health status."""
@@ -123,7 +151,10 @@ def health_check():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "service": "MarkItDown Server",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "workers": WORKERS,
+        "rate_limit_enabled": ENABLE_RATE_LIMIT and RATE_LIMIT_AVAILABLE,
+        "rate_limit": RATE_LIMIT if (ENABLE_RATE_LIMIT and RATE_LIMIT_AVAILABLE) else None
     }
 
 @app.post(
@@ -132,12 +163,14 @@ def health_check():
     responses={
         400: {"model": ErrorResponse, "description": "Invalid file type or file too large"},
         413: {"model": ErrorResponse, "description": "File too large"},
+        429: {"model": ErrorResponse, "description": "Rate limit exceeded"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
     summary="Convert document to Markdown",
     description="Upload a document file and receive its content in Markdown format"
 )
 async def process_file(
+    request: Request,
     file: UploadFile = File(..., description="Document file to convert to Markdown")
 ) -> MarkdownResponse:
     """Process an uploaded file and convert it to Markdown."""
@@ -200,4 +233,24 @@ async def process_file(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8490)     
+    
+    # Log startup configuration
+    logger.info(f"Starting MarkItDown Server with {WORKERS} worker(s)")
+    if ENABLE_RATE_LIMIT and RATE_LIMIT_AVAILABLE:
+        logger.info(f"Rate limiting: {RATE_LIMIT}")
+    
+    # Run with configured number of workers
+    # When workers > 1, we need to pass the app as a string
+    if WORKERS > 1:
+        uvicorn.run(
+            "app:app",
+            host="0.0.0.0", 
+            port=int(os.getenv('PORT', '8490')),
+            workers=WORKERS
+        )
+    else:
+        uvicorn.run(
+            app, 
+            host="0.0.0.0", 
+            port=int(os.getenv('PORT', '8490'))
+        )     
