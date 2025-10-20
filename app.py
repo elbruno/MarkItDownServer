@@ -78,7 +78,14 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # Configuration
-ALLOWED_EXTENSIONS = {'doc', 'docx', 'ppt', 'pptx', 'pdf', 'xls', 'xlsx', 'odt', 'ods', 'odp', 'txt'}
+ALLOWED_EXTENSIONS = {
+    # Document formats
+    'doc', 'docx', 'ppt', 'pptx', 'pdf', 'xls', 'xlsx', 'odt', 'ods', 'odp', 'txt',
+    # Image formats
+    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp', 'svg',
+    # Audio formats
+    'mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a', 'wma'
+}
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
 # Response models

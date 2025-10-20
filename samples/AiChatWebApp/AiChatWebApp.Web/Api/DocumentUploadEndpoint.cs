@@ -31,7 +31,14 @@ public static class DocumentUploadEndpoint
                 }
 
                 // Check file extension
-                var allowedExtensions = new[] { ".pdf", ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls", ".txt", ".md", ".html" };
+                var allowedExtensions = new[] { 
+                    // Document formats
+                    ".pdf", ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls", ".txt", ".md", ".html",
+                    // Image formats
+                    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".svg",
+                    // Audio formats
+                    ".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".wma"
+                };
                 var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 if (!allowedExtensions.Contains(extension))
                 {
